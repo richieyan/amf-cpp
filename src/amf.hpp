@@ -18,7 +18,10 @@
 	#include <endian.h>
 #endif
 
-namespace amf {
+#define NS_AMF_BEGIN namespace amf {
+#define NS_AMF_END }
+
+NS_AMF_BEGIN
 
 typedef unsigned char u8;
 typedef std::vector<u8> v8;
@@ -59,6 +62,6 @@ T read_network(v8::const_iterator& it, v8::const_iterator end) {
 	return ntoh(val);
 }
 
-} // namespace amf
+NS_AMF_END
 
 #endif

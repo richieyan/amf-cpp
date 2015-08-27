@@ -1,4 +1,4 @@
-#include "amftest.hpp"
+#include "../amftest.hpp"
 
 #include "amf.hpp"
 #include "deserializer.hpp"

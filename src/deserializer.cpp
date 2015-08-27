@@ -17,7 +17,7 @@
 #include "types/amfxml.hpp"
 #include "types/amfxmldocument.hpp"
 
-namespace amf {
+NS_AMF_BEGIN
 
 std::map<std::string, ExternalDeserializerFunction> Deserializer::externalDeserializers({ });
 
@@ -77,4 +77,4 @@ AmfItemPtr Deserializer::deserialize(v8 buf) {
 	return deserialize(it, buf.cend(), ctx);
 }
 
-} // namespace amf
+NS_AMF_END

@@ -29,6 +29,11 @@ public:
 		sealedProperties[name] = AmfItemPtr(new T(value));
 	}
 
+	void addSealedProperty(std::string name, AmfItemPtr item) {
+		traits.addAttribute(name);
+		sealedProperties[name] = item;
+	}
+
 	template<class T>
 	void addDynamicProperty(std::string name, const T& value) {
 		dynamicProperties[name] = AmfItemPtr(new T(value));

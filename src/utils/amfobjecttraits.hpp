@@ -3,7 +3,7 @@
 #define AMFOBJECTTRAITS_HPP
 
 #include <string>
-#include <vector>
+#include <set>
 
 namespace amf {
 

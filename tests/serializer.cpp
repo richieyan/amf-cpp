@@ -96,7 +96,7 @@ TEST(SerializerTest, SerializationContext) {
 TEST(SerializerTest, SerializationContextClear) {
 	Serializer s;
 	AmfString str("foo");
-
+	AmfArray arr;
 	s << str;
 	v8 data = { 0x06, 0x07, 0x66, 0x6f, 0x6f };
 	ASSERT_EQ(data, s.data());

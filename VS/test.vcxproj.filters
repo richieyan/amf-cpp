@@ -55,9 +55,6 @@
     <ClCompile Include="..\tests\types\xmldocument.cpp">
       <Filter>types</Filter>
     </ClCompile>
-    <ClCompile Include="..\tests\utils\amfitemptr.cpp">
-      <Filter>utils</Filter>
-    </ClCompile>
     <ClCompile Include="..\tests\utils\amfobjecttraits.cpp">
       <Filter>utils</Filter>
     </ClCompile>
