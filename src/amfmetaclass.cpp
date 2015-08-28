@@ -18,10 +18,15 @@ void AmfMetaClass::serialize(Serializer& serializer) {
 }
 
 const std::vector<Property> & AmfMetaClass::getProperties(){
+	properties.clear();
+	__registerProperties();
 	return properties;
 }
 
 void AmfMetaClass::__convert(AmfObject* obj, Property &p) {
+	if (obj->sealedProperties.find(p.name) == obj->sealedProperties.end()) { 
+		return; 
+	}
 	switch (p.marker)
 	{
 	case TypeMarker::BOOL:
@@ -34,6 +39,11 @@ void AmfMetaClass::__convert(AmfObject* obj, Property &p) {
 	{
 		AmfInteger& value = obj->getSealedProperty<AmfInteger>(p.name);
 		(*(int*)p.addr) = value.value;
+		break;
+	}
+	case TypeMarker::INT64: {
+		AmfString& value = obj->getSealedProperty<AmfString>(p.name);
+		(*(int64_t*)p.addr) = atoll(value.value.c_str());
 		break;
 	}
 	case TypeMarker::STRING:
@@ -112,7 +122,10 @@ AmfItemPtr AmfParser::parseProperty(const Property &p) {
 		const std::string & value = *(std::string*)p.addr;
 		return AmfItemPtr(AmfString(value));
 	}
-
+	case TypeMarker::INT64: {
+		const int64_t & value = *(int64_t*)p.addr;
+		return AmfItemPtr(AmfString(to_string<int64_t>(value)));
+	}
 	case TypeMarker::OBJECT: {
 		std::shared_ptr<AmfMetaClass> meta = *(std::shared_ptr<AmfMetaClass>*)p.addr;
 		return parseProperties(meta->getProperties());
@@ -122,24 +135,37 @@ AmfItemPtr AmfParser::parseProperty(const Property &p) {
 		std::vector<int> & value = *(std::vector<int>*)p.addr;
 		return AmfItemPtr(AmfVector<int>(value));
 	}
-	case TypeMarker::VECTOR_STRING: {
-		std::vector<std::string> & value = *(std::vector<std::string>*)p.addr;
-		AmfItemPtr item(AmfVector<AmfString>({}, false));
-		AmfVector<AmfString>* vec = item.asPtr<AmfVector<AmfString>>();
-		for (std::string & s : value) {
-			vec->push_back(AmfString(s));
+	case TypeMarker::VECTOR_INT64: {
+		std::vector<int64_t> & value = *(std::vector<int64_t>*)p.addr;
+		std::vector<AmfString> dense;
+		for (int i = 0; i < value.size(); i++) {
+			dense.push_back(AmfString(to_string(value.at(i))));
 		}
+		AmfArray array(dense);
+		AmfItemPtr item(array);
 		return item;
 	}
-
+	case TypeMarker::VECTOR_STRING: {
+		std::vector<std::string> & value = *(std::vector<std::string>*)p.addr;
+		std::vector<AmfString> dense;
+		for (std::string & s : value) {
+			dense.push_back(AmfString(s));
+		}
+		AmfArray array(dense);
+		AmfItemPtr item(array);
+		return item;
+	}
 	case TypeMarker::VECTOR_OBJECT: {
 		std::vector<std::shared_ptr<AmfMetaClass>> & value = *(std::vector<std::shared_ptr<AmfMetaClass>>*)p.addr;
-		AmfItemPtr item(AmfVector<AmfObject>({}, false));
-		AmfVector<AmfObject>* vec = item.asPtr<AmfVector<AmfObject>>();
+		std::vector<AmfObject> dense;
+		
 		for (std::shared_ptr<AmfMetaClass> & clazz : value) {
 			AmfItemPtr obj = parseProperties(clazz->getProperties());
-			vec->push_back(obj.as<AmfObject>());
+			dense.push_back(obj.as<AmfObject>());
 		}
+
+		AmfArray array(dense);
+		AmfItemPtr item(array);
 		return item;
 	}
 

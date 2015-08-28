@@ -1,7 +1,10 @@
 #pragma once
 
 #include <string>
+#include <sstream>
+
 #include <memory>
+#include <stdint.h>
 
 #include "amf.hpp"
 #include "serializer.hpp"
@@ -30,10 +33,12 @@ enum class TypeMarker : u8 {
 	NONE,
 	BOOL,
 	INT,
+	INT64,
 	DOUBLE,
 	STRING,
 	OBJECT,
 	VECTOR_INT,
+	VECTOR_INT64,
 	VECTOR_STRING,
 	VECTOR_OBJECT,
 };
@@ -68,16 +73,24 @@ protected:
 
 	template<typename T>
 	void exDeserialize(const std::string & name, AmfObject* root, std::shared_ptr<T> target) {
+		if (root->sealedProperties.find(name) == root->sealedProperties.end()) { 
+			return; 
+		}
 		AmfObject& b = root->getSealedProperty<AmfObject>(name);
 		target->deserialize(&b);
 	}
 	
-	//template<typename T>
-	//void exDeserializeVector(const std::string & name, AmfObject* root, std::vector<shared_ptr<T>> target) {
-	//	AmfArray& b = root->getSealedProperty<AmfArray>(name);
-	//	b.dense.size();
-	//	target->deserialize(&b);
-	//}
+	template<typename T>
+	void exDeserializeVector(const std::string & name, AmfObject* root, std::vector<std::shared_ptr<T>>& target) {
+		AmfArray& b = root->getSealedProperty<AmfArray>(name);
+		int size = (int)b.dense.size();
+		for (int i = 0; i < size; i++) {
+			std::shared_ptr<T> item = std::make_shared<T>();
+			AmfObject* obj = b.dense.at(i).asPtr<AmfObject>();
+			item->deserialize(obj);
+			target.push_back(item);
+		}
+	}
 
 	//nest object need use exDeserialize
 	virtual void __exDeserialize(AmfObject* root) {};
@@ -93,6 +106,13 @@ private:
 class AmfParser {
 public:
 	static AmfItemPtr parseProperties(const std::vector<Property> & properties_);
+
+	template<typename T>
+	static std::string to_string(T value) {
+		std::ostringstream oss;
+		oss << value;
+		return oss.str();
+	}
 private:
 	static AmfItemPtr parseProperty(const Property &p);
 };
